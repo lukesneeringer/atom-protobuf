@@ -5,6 +5,14 @@
 'foldingStopMarker': '\\*\\*/|^\\s*\\}'
 'name': 'Protocol Buffer'
 'patterns': [
+  { 'captures':
+      '1':
+        'name': 'keyword.other.syntax.protobuf'
+      '2':
+        'name': 'string.quoted.double.syntax.protobuf'
+    'match': '(syntax) = ("[A-Za-z0-9]+")'
+    'name': 'meta.syntax.declaration.protobuf'
+  }
   {
     'captures':
       '1':
@@ -79,44 +87,7 @@
     'name': 'meta.service-declaration.protobuf'
     'patterns': [
       {
-        'captures':
-          '1':
-            'name': 'keyword.other.rpc-definition.protobuf'
-          '2':
-            'name': 'entity.name.function.service-rpc.protobuf'
-          '3':
-            'name': 'keyword.other.stream.protobuf'
-          '4':
-            'name': 'variable.parameter.request-type.protobuf'
-          '5':
-            'name': 'keyword.operator.returns.protobuf'
-          '6':
-            'name': 'keyword.other.stream.protobuf'
-          '7':
-            'name': 'variable.parameter.response-type.protobuf'
-        'match': '\\b(rpc)\\s+([A-Za-z0-9_]+)\\s+\\((stream\\s+)?([A-Za-z0-9_\x2e]+)\\)\\s*(returns)\\s*\\((stream\\s+)?([A-Za-z0-9_\x2e]+)\\)\\s*;'
-        'name': 'meta.individual-rpc-call.protobuf'
-      }
-      {
-        'begin': '\\b(method)\\s+([A-Za-z0-9_]+)\\s*\\(\\s*\\)\\s*{'
-        'captures':
-          '1':
-            'name': 'keyword.other.method-modification.protobuf'
-          '2':
-            'name': 'entity.name.function.protobuf'
-        'end': '}'
-        'name': 'meta.method-mofification.protobuf'
-        'patterns': [
-          {
-            'include': '#comments'
-          }
-          {
-            'include': '#rpc_string_attribute'
-          }
-          {
-            'include': '#rpc_primitive_attribute'
-          }
-        ]
+        'include': '#rpc'
       }
       {
         'include': '#anywhere_option'
@@ -178,14 +149,17 @@
       }
     ]
   'anywhere_option':
-    'begin': '(option)\\s+'
+    'begin': '(option)\\s+\\(?([A-Za-z0-9_.]+)\\)?\\s*=\\s*'
     'beginCaptures':
       '1':
         'name': 'keyword.other.option.protobuf'
+      '2':
+        'name': 'entity.other.attribute-name.protobuf'
     'end': ';'
+    'name': 'entity.option.value.protobuf'
     'patterns': [
       {
-        'include': '#attribute'
+        'include': '#const'
       }
     ]
   'attribute':
@@ -195,6 +169,9 @@
       }
       {
         'include': '#string_attribute'
+      }
+      {
+        'include': '#struct_attribute'
       }
     ]
   'bracketed_option':
@@ -209,6 +186,63 @@
     'begin': '//'
     'end': '\\n'
     'name': 'comment.line.double-slash.protobuf'
+  'const':
+    'patterns': [
+      {
+        'include': '#const_bool'
+      }
+      {
+        'include': '#const_number'
+      }
+      {
+        'include': '#const_list'
+      }
+      {
+        'include': '#const_string'
+      }
+      {
+        'include': '#const_struct'
+      }
+    ]
+  'const_bool':
+    'match': '(true|false)'
+    'name': 'constant.numeric.protobuf'
+  'const_number':
+    'match': '[\d.]+'
+    'name': 'constant.numeric.protobuf'
+  'const_list':
+    'begin': '\\['
+    'end': '\\]'
+    'name': 'collection.list.protobuf'
+    'patterns': [
+      {
+        'include': '#const'
+      }
+    ]
+  'const_string':
+    'match': '".*"'
+    'name': 'string.quoted.double.protobuf'
+  'const_struct':
+    'begin': '{'
+    'end': '}'
+    'name': 'collection.struct.protobuf'
+    'patterns': [
+      {
+        'include': '#const_struct_entry'
+      }
+    ]
+  'const_struct_entry':
+    'begin': '([A-Za-z0-9_]+)\\:\\s*'
+    'beginCaptures':
+      '1':
+        'name': 'constant.other.struct.key.protobuf'
+    'end': '(?=}|[A-Za-z0-9_:])'
+    'name': 'collection.other.struct.entry.protobuf'
+    'patterns': [
+      {
+        'include': '#const'
+      }
+    ]
   'extend_block':
     'begin': '\\b(extend)\\s+([A-Za-z0-9_]+)'
     'captures':
@@ -298,6 +332,53 @@
       '7':
         'name': 'constant.numeric.field-tag.protobuf'
     'match': '(required|optional|repeated)?\\s+(((s|u)?int|s?fixed)(32|64)|string|bytes|bool)\\s+(\\S+)\\s*=\\s*(\\d+)'
+  'method':
+      'begin': '\\b(method)\\s+([A-Za-z0-9_]+)\\s*\\(\\s*\\)\\s*{'
+      'captures':
+        '1':
+          'name': 'keyword.other.method-modification.protobuf'
+        '2':
+          'name': 'entity.name.function.protobuf'
+      'end': '}'
+      'name': 'meta.method-mofification.protobuf'
+      'patterns': [
+        {
+          'include': '#comments'
+        }
+        {
+          'include': '#rpc_string_attribute'
+        }
+        {
+          'include': '#rpc_primitive_attribute'
+        }
+      ]
+  'rpc':
+    'begin': '(rpc)\\s+([A-Za-z0-9_]+)\\s*\\((stream )?([A-Za-z0-9._]+)\\)\\s+(returns)\\s+\\((stream )?([A-Za-z0-9._]+)\\)'
+    'beginCaptures':
+      '1':
+        'name': 'keyword.other.rpc.protobuf'
+      '2':
+        'name': 'entity.name.function.service-rpc.protobuf'
+      '3':
+        'name': 'keyword.other.stream.protobuf'
+      '4':
+        'name': 'entity.name.type.message.protobuf'
+      '5':
+        'name': 'keyword.operator.return.protobuf'
+      '6':
+        'name': 'keyword.other.stream.protobuf'
+      '7':
+        'name': 'entity.name.type.message.protobuf'
+    'name': 'meta.rpc-declaration.protobuf'
+    'patterns': [
+      {
+        'include': '#anywhere_option'
+      }
+      {
+        'include': '#comments'
+      }
+    ]
+    'end': '[};]'
   'rpc_primitive_attribute':
     'beginCaptures':
       '1':
@@ -347,5 +428,5 @@
         'name': 'variable.other.primitive-field.protobuf'
       '4':
         'name': 'constant.numeric.field-tag.protobuf'
-    'match': '(required|optional|repeated)?\\s+([A-Za-z.]*)\\s+(\\S+)\\s*=\\s*(\\d+)'
+    'match': '(required|optional|repeated)?\\s+([A-Za-z][A-Za-z0-9.]*)\\s+(\\S+)\\s*=\\s*(\\d+)'
 'scopeName': 'source.protobuf'
